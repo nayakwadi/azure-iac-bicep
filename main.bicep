@@ -6,6 +6,8 @@ param envPrefix string
 param location string
 param vmNameFromParams string
 param vmAdminUsername string
+
+@secure()
 param vmAdminPassword string
 
 module stgAccnt './modules/stg-accnt/stg_accnt.bicep' = {
