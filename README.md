@@ -1,65 +1,113 @@
-In Bicep, decorators are annotations (metadata) that you attach to parameters, variables, resources, modules, or outputs to modify their behavior, add validation, provide defaults, or give helpful descriptions.
+(The file is currently empty)
+# Azure Bicep — 3 Stages Deployment
 
-They start with the @ symbol and are placed before the declaration.
+This repository contains an Azure Infrastructure-as-Code example using Bicep with reusable modules and environment parameter sets for three stages (dev, stage, prod). The project demonstrates organizing Bicep modules, environment parameter files, and simple deployment commands for a VM scale set and related infrastructure.
 
-🔹 Common Bicep Decorators
-Decorator	Used With	Purpose / Description	Example
-@description()	parameters, variables, outputs	Adds a human-readable description (helpful in ARM portal or docs).	@description('The name of the storage account.')
-@minLength()	parameters	Enforces a minimum string/array length.	@minLength(3)
-@maxLength()	parameters	Enforces a maximum string/array length.	@maxLength(24)
-@allowed()	parameters	Restricts allowed values to a list.	@allowed(['eastus', 'westus'])
-@secure()	parameters	Marks parameter as secure (hidden in outputs/logs).	@secure()
-@minValue()	parameters	Enforces minimum numeric value.	@minValue(1)
-@maxValue()	parameters	Enforces maximum numeric value.	@maxValue(10)
-@batchSize()	module	Controls parallel deployment of module instances.	@batchSize(5)
-@sys.* decorators	resources	Add metadata for Azure features like diagnostic settings or RBAC.	@sys.lock('CanNotDelete')
-🔹 Example: Parameter Decorators
-@description('Specifies the Azure region for deployment.')
-@allowed([
-  'eastus'
-  'westus'
-  'centralus'
-])
-param location string = 'eastus'
+Contents
+- `main.bicep` — root orchestration file for the deployment
+- `main_for_vmss.bicep` — alternative root file targeting VM Scale Set scenarios
+- `modules/` — reusable component modules (vnet, nic, nsg, publicip, vm, rg, storage, stg-accnt)
+- `environments/` — environment-specific parameter files
+	- `dev/`, `stage/`, `prod/` — parameter sets (example: `dev_paramvalues.bicepparam`)
+- `decorators_examples/` — additional example Bicep files using decorators
+- `deployment-command.txt` — example az CLI commands for validate and create
 
-@description('The name of the storage account.')
-@minLength(3)
-@maxLength(24)
-param storageAccountName string
+Why this layout
+- Modules are placed under `modules/` so they can be referenced from `main.bicep` and re-used across environments.
+- Environment parameter files keep environment differences (size, names, credentials) out of templates.
 
+Prerequisites
+- Azure CLI (az) installed and logged in. Recommended version: latest.
+- Bicep CLI or Azure CLI with integrated Bicep support (az bicep) installed. Example to install/update:
 
-This adds:
+	```bash
+	az bicep install
+	az --version
+	```
 
-Validation (only certain locations)
+- An Azure subscription and a resource group to deploy into. Example resource group used in examples: `snbiceprg`.
 
-Constraints (length rules)
+Basic deployment workflow
 
-Description (for clarity in the Azure portal)
+1. Validate the deployment (checks template and parameters):
 
-🔹 Example: Secure Parameter
-@secure()
-@description('Admin password for the VM.')
-param adminPassword string
+```bash
+az deployment group validate \
+	--name vmscalesetdeploy \
+	--resource-group <your-resource-group> \
+	--template-file main.bicep \
+	--parameters ./environments/dev/dev_paramvalues.bicepparam \
+	--mode Incremental
+```
 
+2. Create (deploy) the resources:
 
-👉 The password will be hidden in deployment logs and outputs.
+```bash
+az deployment group create \
+	--name vmscalesetdeploy \
+	--resource-group <your-resource-group> \
+	--template-file main.bicep \
+	--parameters ./environments/dev/dev_paramvalues.bicepparam \
+	--mode Incremental
+```
 
-🔹 Example: Module Decorator
-@batchSize(3)
-module storageModule './storage.bicep' = [for i in range(0, 10): {
-  name: 'storage${i}'
-  params: {
-    location: location
-  }
-}]
+3. Example: pass a VM admin password at runtime (not recommended for CI — prefer Key Vault or secure pipeline variables):
 
+```bash
+az deployment group create \
+	--name envDeployment \
+	--resource-group <your-resource-group> \
+	--template-file main.bicep \
+	--parameters ./environments/dev/dev_paramvalues.bicepparam \
+	--parameters vmAdminPassword='<vmPassword>' \
+	--mode Incremental
+```
 
-➡ Deploys storage modules in batches of 3 at a time (instead of all 10 simultaneously).
+Selecting environment and files
+- To deploy a different environment, point `--parameters` to the respective file, e.g. `./environments/stage/stage_paramvalues.bicepparam` or `./environments/prod/prod_paramvalues.bicepparam` (if present).
+- If you want to use the VMSS-specific root, use `main_for_vmss.bicep` as `--template-file`.
 
+Recommendations for secrets
+- Do NOT store secrets (passwords, client secrets) in source control. Use Azure Key Vault and reference secrets at deployment time via parameters or linked templates.
+- In CI/CD pipelines use secure variables and service principals with minimal scope.
 
-To validate all the values and syntax mentioned in all files, we can use 'validate' command.
-```eg: az deployment group validate --name decoratorDeployment --resource-group snbiceprg  --template-file main.bicep  --parameters  paramvalues.bicepparam```
+CI/CD and automation notes
+- These commands can be executed from Azure DevOps, GitHub Actions, or any CI runner with az CLI installed. Example high-level steps for a pipeline:
+	1. Login using a service principal (az login --service-principal ...)
+	2. Select subscription (az account set --subscription <id>)
+	3. Run `az deployment group validate` then `az deployment group create`.
 
-if 'validate' is success, list of resources to be created would be displayed in JSON format
-Then we can move to actual 'create' command
-```az deployment group create --name decoratorDeployment --resource-group snbiceprg  --template-file main.bicep  --parameters  paramvalues.bicepparam```
+Troubleshooting
+- Template errors: run `az bicep build --file main.bicep` to ensure compilation to ARM JSON works.
+- Parameter mismatches: check parameter names/types between `main.bicep` and the `.bicepparam` file.
+- Permission errors: ensure your identity has `Microsoft.Resources/deployments/*` and resource provider registration is complete for required resource types.
+
+Useful commands
+- Build Bicep to ARM JSON:
+
+```bash
+az bicep build --file main.bicep --outdir ./compiled
+```
+
+- Lint/format using Bicep linter (if installed):
+
+```bash
+az bicep lint --file main.bicep
+```
+
+Repository tips
+- Keep modules small and focused (one responsibility each: network, compute, storage).
+- Refer to modules using relative paths from `main.bicep`, for example:
+
+```bicep
+module vnet 'modules/vnet/vnet.bicep' = {
+	name: 'vnet'
+	params: {}
+}
+```
+
+- Add environment-specific overrides only in the `.bicepparam` files.
+
+Next steps (suggested)
+- Add a CI pipeline example (GitHub Actions or Azure DevOps) that runs validate -> create using service principal credentials and secrets stored in Key Vault.
+- Add a `CONTRIBUTING.md` if you'll accept external contributions and want consistent parameter/variable patterns.
