@@ -1,4 +1,3 @@
-(The file is currently empty)
 # Azure Bicep — 3 Stages Deployment
 
 This repository contains an Azure Infrastructure-as-Code example using Bicep with reusable modules and environment parameter sets for three stages (dev, stage, prod). The project demonstrates organizing Bicep modules, environment parameter files, and simple deployment commands for a VM scale set and related infrastructure.
@@ -110,6 +109,3 @@ module vnet 'modules/vnet/vnet.bicep' = {
 
 - Add environment-specific overrides only in the `.bicepparam` files.
 
-Next steps (suggested)
-- Add a CI pipeline example (GitHub Actions or Azure DevOps) that runs validate -> create using service principal credentials and secrets stored in Key Vault.
-- Add a `CONTRIBUTING.md` if you'll accept external contributions and want consistent parameter/variable patterns.
