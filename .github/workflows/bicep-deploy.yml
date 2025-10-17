@@ -17,12 +17,12 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy Bicep file
-        run: |
-          az deployment group create \
-            --name envDeployment \
-            --resource-group snbiceprg \
-            --template-file main.bicep \
-            --parameters ./environments/dev/dev_paramvalues.bicepparam \
-            --parameters vmAdminPassword="${{ secrets.VM_PASSWORD }}" \
-            --mode Incremental
+      - name: Deploy Bicep to resource group
+        uses: azure/arm-deploy@v1
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: snbiceprg
+          template: ./main.bicep
+          parameters: ./environments/dev/dev_paramvalues.bicepparam vmAdminPassword=${{ secrets.VM_PASSWORD }}
+          deploymentMode: Incremental
+          deploymentName: envDeployment
