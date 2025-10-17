@@ -3,11 +3,10 @@ param envPrefix string
 
 var networkSecurityGroupName = '${envPrefix}nsg'
 
-resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
-  name: networkSecurityGroupName
-  location: location
-  properties: {
-    securityRules: [
+// Define security rules only for non-Prod environments
+var securityRules = envPrefix == 'prod'
+  ? []
+  : [
       {
         name: 'SSH'
         properties: {
@@ -22,6 +21,12 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-09-0
         }
       }
     ]
+
+resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
+  name: networkSecurityGroupName
+  location: location
+  properties: {
+    securityRules: securityRules
   }
 }
 

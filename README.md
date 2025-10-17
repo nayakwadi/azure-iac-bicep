@@ -64,6 +64,7 @@ az deployment group create \
 
 Selecting environment and files
 - To deploy a different environment, point `--parameters` to the respective file, e.g. `./environments/stage/stage_paramvalues.bicepparam` or `./environments/prod/prod_paramvalues.bicepparam` (if present).
+- Note the SSH access based security rule is added in nsg ONLY for dev & test. Verify the nsg.bicel file
 - If you want to use the VMSS-specific root, use `main_for_vmss.bicep` as `--template-file`.
 
 Recommendations for secrets
