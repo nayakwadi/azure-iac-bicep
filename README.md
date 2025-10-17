@@ -76,6 +76,8 @@ CI/CD and automation notes
 	1. Login using a service principal (az login --service-principal ...)
 	2. Select subscription (az account set --subscription <id>)
 	3. Run `az deployment group validate` then `az deployment group create`.
+    4. Multi stage deployment set up as per workflos in .github folder
+       ![alt text](<Screenshot 2025-10-17 at 10.08.09 AM.png>)
 
 Troubleshooting
 - Template errors: run `az bicep build --file main.bicep` to ensure compilation to ARM JSON works.
