@@ -6,11 +6,7 @@ param envPrefix string
 param location string
 param vmNameFromParams string
 param vmAdminUsername string
-
-resource KV 'Microsoft.KeyVault/vaults@2021-06-01-preview' existing = {
-  name: 'snvmkeyvault'
-  scope: resourceGroup('snbiceprg')
-}
+param vmAdminPassword string
 
 module stgAccnt './modules/stg-accnt/stg_accnt.bicep' = {
   name: 'storageDeploy'
@@ -62,6 +58,6 @@ module vm 'modules/vm/vm.bicep' = {
     vmNameFromParams: vmNameFromParams
     adminUsername: vmAdminUsername
     nicId: nic.outputs.nicidvalue
-    adminPasswordOrKey: KV.getSecret('vmPassword')
+    adminPasswordOrKey: vmAdminPassword
   }
 }
