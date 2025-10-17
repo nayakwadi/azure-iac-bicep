@@ -1,7 +1,7 @@
 using '../../main.bicep'
 
-param envPrefix = 'dev'
+param envPrefix = 'prod'
 param location = 'eastus2'
-param vmNameFromParams = 'devLinuxVM'
+param vmNameFromParams = 'prodLinuxVM'
 param vmAdminUsername = '<passfromsecret>'
 param vmAdminPassword = '<passfromsecret>'
