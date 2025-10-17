@@ -1,0 +1,27 @@
+name: Deploy Bicep file
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: azure-bicep-3stages-deploy
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@main
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Bicep file
+        uses: azure/arm-deploy@v1
+        with:
+          subscriptionId: "5e9e32c1-3ce2-41c4-958f-82dcdfb98924"
+          resourceGroupName: "snbiceprg"
+          template: ./main.bicep
+          parameters: "storagePrefix=mystore storageSKU=Standard_LRS"
+          failOnStdErr: false

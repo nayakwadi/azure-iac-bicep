@@ -1,0 +1,20 @@
+1. First run the 'validate' command which verifies all files and syntaxes. If this looks good, output from this 
+command would display the list of resources to be deployed 
+az deployment group validate \
+  --name vmscalesetdeploy \
+  --resource-group snbiceprg \
+  --template-file main.bicep \
+  --parameters ./environments/dev/dev_paramvalues.bicepparam \
+  --mode Incremental
+
+2. Then run the 'create' command which verifies all files and syntaxes. If this looks good, output from this 
+command would display the list of resources to be deployed 
+az deployment group create \
+  --name vmscalesetdeploy \
+  --resource-group snbiceprg \
+  --template-file main.bicep \
+  --parameters ./environments/dev/dev_paramvalues.bicepparam \
+  --mode Incremental
+
+3. To run the create command from local machine using az deployment with password to VM 
+az deployment group create --name envDeployment --resource-group snbiceprg  --template-file main.bicep --parameters ./environments/dev/dev_paramvalues.bicepparam  --parameters vmAdminPassword='<vmPassword>' --mode Incremental
